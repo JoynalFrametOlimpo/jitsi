@@ -42,6 +42,8 @@ services:
             meet.jitsi:
                 aliases:
                     - ${XMPP_DOMAIN}
+                ipv4_address: 172.18.0.4
+
 
     # XMPP server
     prosody:

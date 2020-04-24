@@ -1,35 +1,7 @@
-FORCE_REBUILD ?= 0
-JITSI_RELEASE ?= stable
-JITSI_BUILD ?= latest
-JITSI_REPO ?= jitsi
-JITSI_SERVICES ?= base base-java web prosody jicofo jvb jigasi etherpad jibri
-
-BUILD_ARGS := --build-arg JITSI_REPO=$(JITSI_REPO)
-ifeq ($(FORCE_REBUILD), 1)
-  BUILD_ARGS := $(BUILD_ARGS) --no-cache
-endif
-
-
-all:	build-all
-
-release: tag-all push-all
-
-build:
-	$(MAKE) BUILD_ARGS="$(BUILD_ARGS)" JITSI_REPO="$(JITSI_REPO)" JITSI_RELEASE="$(JITSI_RELEASE)" -C $(JITSI_SERVICE) build
-
-tag:
-	docker tag $(JITSI_REPO)/$(JITSI_SERVICE):latest $(JITSI_REPO)/$(JITSI_SERVICE):$(JITSI_BUILD)
-
-push:
-	docker push $(JITSI_REPO)/$(JITSI_SERVICE):latest
-	docker push $(JITSI_REPO)/$(JITSI_SERVICE):$(JITSI_BUILD)
-
-%-all:
-	@$(foreach SERVICE, $(JITSI_SERVICES), $(MAKE) --no-print-directory JITSI_SERVICE=$(SERVICE) $(subst -all,;,$@))
-
-clean:
-	docker-compose stop
-	docker-compose rm
-	docker network prune
-
-.PHONY: all build tag push clean
+new:
+	docker-compose stop && docker-compose rm -f && rm -rf jitsi-meet-cfg/ && docker-compose up -d \
+	&& cp customize/interface_config.js jitsi-meet-cfg/web/ \
+	&& cp customize/config.js jitsi-meet-cfg/web/ \
+	&& docker-compose restart \
+        && cp -rfl /etc/letsencrypt/live/ jitsi-meet-cfg/web/letsencrypt/ \
+	&& docker logs -f jitsi_jvb_1 --tail 20
